@@ -5,6 +5,7 @@ import * as xlsx from 'xlsx';
 import { AwsService } from './aws.service';
 
 import * as rewrelice from 'newrelic';
+import { REFUND_BUS_SERVICE } from '@app/common';
 
 type PayloadRefundType = {
   ruc: string;
@@ -19,14 +20,17 @@ type PayloadRefundType = {
 export class ReadFileService {
   constructor(
     private readonly awsService: AwsService,
-    @Inject('REFUND_BUS_SERVICE') private client: ClientProxy,
+    @Inject(REFUND_BUS_SERVICE) private client: ClientProxy,
   ) {}
 
   async readFileExcelSync(keyFile: string) {
     try {
-      const fileBuffer = await this.awsService.dowloadFile(keyFile);
+      // const fileBuffer = await this.awsService.dowloadFile(keyFile);
 
-      const file = await xlsx.read(fileBuffer, { type: 'buffer' });
+      // const file = await xlsx.read(fileBuffer, { type: 'buffer' });
+      const file = await xlsx.readFile(
+        '/home/chaicopadillag/Descargas/Devo_Corpo_RUC_100.xlsx',
+      );
 
       const data: PayloadRefundType[] = [];
 
@@ -54,11 +58,15 @@ export class ReadFileService {
     }
   }
 
-  async enviarColaDevolucion(payload: { key: string; url: string }) {
+  async enviarColaDevolucionXFila(payload: { key: string; url: string }) {
     const devoluciones = await this.readFileExcelSync(payload.key);
 
     for (const devolucion of devoluciones) {
-      this.client.emit('new_refund', devolucion);
+      this.enviarColaDevolucion(devolucion);
     }
+  }
+
+  enviarColaDevolucion(payload: PayloadRefundType) {
+    this.client.emit('new_refund', payload);
   }
 }

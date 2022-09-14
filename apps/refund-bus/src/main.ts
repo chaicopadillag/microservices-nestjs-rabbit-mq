@@ -14,7 +14,14 @@ async function bootstrap() {
       },
     },
   });
+  // const app = await NestFactory.create(RefundBusModule);
+
+  // const rmqService = app.get<RmqService>(RmqService);
+  // app.connectMicroservice(rmqService.getOptions('REFUND_BUS'));
+
   app.useGlobalInterceptors(new NewrelicInterceptor());
+
+  // await app.startAllMicroservices();
 
   await app.listen();
 }

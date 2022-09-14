@@ -1,3 +1,0 @@
-export const USER_SERVICE = 'USER';
-export const MESSAGE_SERVICE = 'MESSAGE';
-export const NOTIFICATION_SERVICE = 'NOTIFICATION';

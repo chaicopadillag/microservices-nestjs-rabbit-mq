@@ -1,8 +1,12 @@
-import { HttpClientService } from '@app/common';
+import {
+  HttpClientService,
+  REFUND_BUS_QUEUE,
+  REFUND_BUS_SERVICE,
+  RmqModule,
+} from '@app/common';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ClientsModule, Transport } from '@nestjs/microservices';
 import { RefundRbMqController } from './controllers';
 
 import { RefundController } from './refund.controller';
@@ -15,19 +19,10 @@ import { AwsService, ReadFileService } from './services';
     HttpModule.registerAsync({
       useClass: HttpClientService,
     }),
-    ClientsModule.register([
-      {
-        name: 'REFUND_BUS_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: ['amqp://localhost:5672'],
-          queue: 'refund_bus',
-          queueOptions: {
-            durable: true,
-          },
-        },
-      },
-    ]),
+    RmqModule.registerRmq({
+      name: REFUND_BUS_SERVICE,
+      queue: REFUND_BUS_QUEUE,
+    }),
   ],
   controllers: [RefundController, RefundRbMqController],
   providers: [RefundService, AwsService, ReadFileService],

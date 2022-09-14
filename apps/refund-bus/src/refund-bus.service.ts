@@ -1,9 +1,11 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { catchError, map } from 'rxjs';
 
 import * as rewrelice from 'newrelic';
-import { map } from 'rxjs';
+import { ClientProxy } from '@nestjs/microservices';
+import { REFUND_SERVICE } from '@app/common';
 
 export type PayloadRefundType = {
   ruc: string;
@@ -23,6 +25,7 @@ export class RefundBusService {
   constructor(
     private readonly configService: ConfigService,
     private readonly httpClient: HttpService,
+    @Inject(REFUND_SERVICE) private client: ClientProxy,
   ) {
     this.hostApiRefund = this.configService.get('HOST_URL_MS_REFUND');
     this.userKey = this.configService.get('USER_KEY');
@@ -30,7 +33,38 @@ export class RefundBusService {
 
   procesarDevolucion(payload: PayloadRefundType) {
     try {
-      const data = JSON.stringify(payload);
+      const data = JSON.stringify({
+        audit: {
+          appId: 'DEVO002V1',
+          usuario: 'OMNICHANNEL',
+          ipServidor: '127.0.0.1',
+          transaccionId: '159220260624408',
+          origen: 'OMNICHANNEL',
+        },
+        registroDevolucionRequest: {
+          comercio: {
+            id: payload.comercio,
+            ruc: payload.ruc,
+            segmento: 'C',
+          },
+          transaccion: {
+            id: payload.venta,
+            fechaTransaccion: '2022-05-10',
+            moneda: 'PEN',
+            monto: 260,
+            tarjeta: {
+              marca: 'MC',
+              nroTarjeta: '547880******6236',
+            },
+          },
+          devolucion: {
+            moneda: 'PEN',
+            monto: payload.monto,
+            usuarioRegistro: 'admdevosol01@yopmail.com',
+          },
+          isMassiveRefund: true,
+        },
+      });
 
       rewrelice.addCustomAttributes({
         ...payload,
@@ -42,14 +76,26 @@ export class RefundBusService {
             'user-key': this.userKey,
           },
         })
-        .pipe(map((res) => res.data))
+        .pipe(
+          catchError((error) => {
+            throw { data: error.response.data, status: error.response.status };
+          }),
+          map((res) => res.data),
+        )
         .subscribe((result) => {
           console.log('Resultado de consulta', JSON.stringify(result));
         });
-      console.log(payload);
     } catch (error) {
-      this.log('Error la obtener consulta deuda', error);
+      if (error?.status && error.status === 503) {
+        this.volverEnviarCola(payload);
+      }
+
+      this.log('Error al processar devolucion', error);
     }
+  }
+
+  volverEnviarCola(payload: PayloadRefundType) {
+    this.client.emit('retun_refund', payload);
   }
 
   log(message: string, err: any) {

@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 
 type RmqModuleOptions = {
   name: string;
+  queue: string;
 };
 
 @Module({
@@ -13,7 +14,7 @@ type RmqModuleOptions = {
   exports: [RmqService],
 })
 export class RmqModule {
-  static registerRmq({ name }: RmqModuleOptions): DynamicModule {
+  static registerRmq({ name, queue }: RmqModuleOptions): DynamicModule {
     return {
       module: RmqModule,
       imports: [
@@ -24,7 +25,7 @@ export class RmqModule {
               transport: Transport.RMQ,
               options: {
                 urls: [configService.get<string>('RABBIT_MQ_URI')],
-                queue: configService.get<string>(`RABBIT_MQ_${name}_QUEUE`),
+                queue: configService.get<string>(`RABBIT_MQ_${queue}_QUEUE`),
               },
             }),
             inject: [ConfigService],

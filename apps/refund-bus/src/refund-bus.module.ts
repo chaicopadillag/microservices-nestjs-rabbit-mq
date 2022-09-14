@@ -1,4 +1,9 @@
-import { HttpClientService } from '@app/common';
+import {
+  HttpClientService,
+  REFUND_QUEUE,
+  REFUND_SERVICE,
+  RmqModule,
+} from '@app/common';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -14,6 +19,7 @@ import { RefundBusService } from './refund-bus.service';
     HttpModule.registerAsync({
       useClass: HttpClientService,
     }),
+    RmqModule.registerRmq({ name: REFUND_SERVICE, queue: REFUND_QUEUE }),
   ],
   controllers: [RefundBusController],
   providers: [RefundBusService],

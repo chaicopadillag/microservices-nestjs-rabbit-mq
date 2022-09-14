@@ -1,12 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "apps/user/src",
+  "sourceRoot": "apps/refund/src",
   "monorepo": true,
-  "root": "apps/user",
+  "root": "apps/refund",
   "compilerOptions": {
     "webpack": true,
-    "tsConfigPath": "apps/user/tsconfig.app.json"
+    "tsConfigPath": "apps/refund/tsconfig.app.json"
   },
   "projects": {
     "refund": {
@@ -16,33 +16,6 @@
       "sourceRoot": "apps/refund/src",
       "compilerOptions": {
         "tsConfigPath": "apps/refund/tsconfig.app.json"
-      }
-    },
-    "user": {
-      "type": "application",
-      "root": "apps/user",
-      "entryFile": "main",
-      "sourceRoot": "apps/user/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/user/tsconfig.app.json"
-      }
-    },
-    "message": {
-      "type": "application",
-      "root": "apps/message",
-      "entryFile": "main",
-      "sourceRoot": "apps/message/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/message/tsconfig.app.json"
-      }
-    },
-    "notification": {
-      "type": "application",
-      "root": "apps/notification",
-      "entryFile": "main",
-      "sourceRoot": "apps/notification/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/notification/tsconfig.app.json"
       }
     },
     "common": {
