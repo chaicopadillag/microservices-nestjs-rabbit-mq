@@ -14,6 +14,7 @@ export type PayloadRefundType = {
   monto: number;
   descripcion: string;
   keyFile: string;
+  intento: number;
 };
 
 @Injectable()
@@ -31,7 +32,7 @@ export class RefundBusService {
     this.userKey = this.configService.get('USER_KEY');
   }
 
-  procesarDevolucion(payload: PayloadRefundType) {
+  async procesarDevolucion(payload: PayloadRefundType) {
     try {
       const data = JSON.stringify({
         audit: {
@@ -43,12 +44,12 @@ export class RefundBusService {
         },
         registroDevolucionRequest: {
           comercio: {
-            id: payload.comercio,
-            ruc: payload.ruc,
+            id: payload.comercio.toString(),
+            ruc: payload.ruc.toString(),
             segmento: 'C',
           },
           transaccion: {
-            id: payload.venta,
+            id: payload.venta.toString(),
             fechaTransaccion: '2022-05-10',
             moneda: 'PEN',
             monto: 260,
@@ -76,9 +77,18 @@ export class RefundBusService {
             'user-key': this.userKey,
           },
         })
+        // .toPromise();
         .pipe(
           catchError((error) => {
-            throw { data: error.response.data, status: error.response.status };
+            // rewrelice.noticeError(error);
+            // rewrelice.addCustomAttributes({
+            //   refundError: true,
+            //   ...error,
+            // });
+            throw {
+              data: error.response?.data || {},
+              status: error.response.status,
+            };
           }),
           map((res) => res.data),
         )
@@ -86,10 +96,14 @@ export class RefundBusService {
           console.log('Resultado de consulta', JSON.stringify(result));
         });
     } catch (error) {
+      // rewrelice.addCustomAttributes({
+      //   refundError: true,
+      //   ...error,
+      // });
       if (error?.status && error.status === 503) {
-        this.volverEnviarCola(payload);
+        if (payload.intento <= 3)
+          this.volverEnviarCola({ ...payload, intento: payload.intento + 1 });
       }
-
       this.log('Error al processar devolucion', error);
     }
   }

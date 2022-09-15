@@ -14,6 +14,7 @@ type PayloadRefundType = {
   monto: number;
   descripcion: string;
   keyFile: string;
+  intento: number;
 };
 
 @Injectable()
@@ -48,6 +49,7 @@ export class ReadFileService {
             monto: Number(columns[3]),
             descripcion: columns[4],
             keyFile,
+            intento: 1,
           });
         }
       });
